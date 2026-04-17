@@ -2,27 +2,45 @@
 
 {% block title %}Home | SkillMatch{% endblock %}
 
+{% block page_intro %}
+<div class="page-intro page-intro-home">
+    <div>
+        <span class="page-kicker">System Workspace</span>
+        <h1 class="page-title">Welcome to SkillMatch</h1>
+        <p class="page-description mb-0">
+            Centralized access to user records, project requirements, skills data, and application workflows.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
 {% block content %}
 <section class="hero-card rounded-4 p-5">
     <div class="row align-items-center g-4">
         <div class="col-lg-7">
-            <span class="eyebrow">Team Matching Platform</span>
-            <h1 class="display-5 fw-bold mt-3 mb-3">Build and manage talent connections with SkillMatch.</h1>
+            <span class="eyebrow">Database-Driven Matching System</span>
+            <h1 class="display-5 fw-bold mt-3 mb-3">SkillMatch: Talent and Project Matching System</h1>
             <p class="lead text-secondary mb-4">
-                This starter app currently includes the homepage and a complete user management flow
-                for viewing, adding, editing, and deleting users.
+                SkillMatch is a web-based information system that helps manage users, skills,
+                projects, and applications in a centralized database. The platform supports
+                structured data management and lays the foundation for skill-based matching
+                between users and projects.
             </p>
-            <a href="{{ url_for('users') }}">Go to Users</a>
+            <a href="{{ url_for('users') }}" class="btn btn-primary btn-lg">View Users</a>
         </div>
         <div class="col-lg-5">
-            <div class="feature-panel">
-                <h2 class="h5 mb-3">Included in this first pass</h2>
-                <ul class="feature-list">
-                    <li>Homepage</li>
-                    <li>All users listing</li>
-                    <li>Add user form</li>
-                    <li>Edit user form</li>
-                    <li>Delete user action</li>
+            <div class="feature-panel overview-panel">
+                <span class="panel-label">Core Modules</span>
+                <h2 class="h4 mb-3 mt-2">System Overview</h2>
+                <p class="text-secondary mb-4">
+                    Access key data domains through a centralized interface designed for
+                    structured record management and future matching workflows.
+                </p>
+                <ul class="feature-list overview-list">
+                    <li>Manage user records</li>
+                    <li>Track projects and requirements</li>
+                    <li>Store skills and proficiency levels</li>
+                    <li>Monitor applications and matching data</li>
                 </ul>
             </div>
         </div>
