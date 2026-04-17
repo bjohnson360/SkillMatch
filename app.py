@@ -436,6 +436,142 @@ def delete_project(project_id):
     return redirect(url_for("projects"))
 
 
+def get_application_form_options():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT user_id, name
+            FROM Users
+            ORDER BY name
+            """
+        )
+        users_list = cursor.fetchall()
+
+        cursor.execute(
+            """
+            SELECT project_id, title
+            FROM Project
+            ORDER BY title
+            """
+        )
+        projects_list = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return users_list, projects_list
+
+
+@app.route("/applications")
+def applications():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                A.application_id,
+                U.name AS user_name,
+                P.title AS project_title,
+                A.application_date,
+                A.status
+            FROM Application A
+            JOIN Users U ON A.user_id = U.user_id
+            JOIN Project P ON A.project_id = P.project_id
+            ORDER BY A.application_id
+            """
+        )
+        applications_list = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template("applications/list.html", applications=applications_list)
+
+
+@app.route("/applications/add", methods=["GET", "POST"])
+def add_application():
+    users_list, projects_list = get_application_form_options()
+
+    if request.method == "POST":
+        form_data = {
+            "user_id": request.form.get("user_id", "").strip(),
+            "project_id": request.form.get("project_id", "").strip(),
+            "application_date": request.form.get("application_date", "").strip(),
+            "status": request.form.get("status", "").strip(),
+        }
+
+        if (
+            not form_data["user_id"]
+            or not form_data["project_id"]
+            or not form_data["application_date"]
+            or not form_data["status"]
+        ):
+            flash("User, project, application date, and status are required.", "danger")
+            return render_template(
+                "applications/form.html",
+                title="Add Application",
+                heading="Add Application",
+                button_label="Create Application",
+                application=form_data,
+                users=users_list,
+                projects=projects_list,
+                form_action=url_for("add_application"),
+            )
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                """
+                INSERT INTO Application (user_id, project_id, application_date, status)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (
+                    form_data["user_id"],
+                    form_data["project_id"],
+                    form_data["application_date"],
+                    form_data["status"],
+                ),
+            )
+            connection.commit()
+            flash("Application added successfully.", "success")
+            return redirect(url_for("applications"))
+        except Error as exc:
+            connection.rollback()
+            flash(f"Could not add application: {exc.msg}", "danger")
+        finally:
+            cursor.close()
+            connection.close()
+
+        return render_template(
+            "applications/form.html",
+            title="Add Application",
+            heading="Add Application",
+            button_label="Create Application",
+            application=form_data,
+            users=users_list,
+            projects=projects_list,
+            form_action=url_for("add_application"),
+        )
+
+    return render_template(
+        "applications/form.html",
+        title="Add Application",
+        heading="Add Application",
+        button_label="Create Application",
+        application={},
+        users=users_list,
+        projects=projects_list,
+        form_action=url_for("add_application"),
+    )
+
+
 if __name__ == "__main__":
     app.run(
         debug=True,

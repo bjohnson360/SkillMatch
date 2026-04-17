@@ -21,6 +21,7 @@
                 <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a>
                 <a class="nav-link {% if request.endpoint in ['users', 'add_user', 'edit_user'] %}active{% endif %}" href="{{ url_for('users') }}">Users</a>
                 <a class="nav-link {% if request.endpoint in ['projects', 'add_project', 'edit_project'] %}active{% endif %}" href="{{ url_for('projects') }}">Projects</a>
+                <a class="nav-link {% if request.endpoint in ['applications', 'add_application'] %}active{% endif %}" href="{{ url_for('applications') }}">Applications</a>
             </div>
         </div>
     </nav>
