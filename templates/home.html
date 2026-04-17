@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Home | SkillMatch{% endblock %}
+
+{% block content %}
+<section class="hero-card rounded-4 p-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <span class="eyebrow">Team Matching Platform</span>
+            <h1 class="display-5 fw-bold mt-3 mb-3">Build and manage talent connections with SkillMatch.</h1>
+            <p class="lead text-secondary mb-4">
+                This starter app currently includes the homepage and a complete user management flow
+                for viewing, adding, editing, and deleting users.
+            </p>
+            <a href="{{ url_for('users') }}">Go to Users</a>
+        </div>
+        <div class="col-lg-5">
+            <div class="feature-panel">
+                <h2 class="h5 mb-3">Included in this first pass</h2>
+                <ul class="feature-list">
+                    <li>Homepage</li>
+                    <li>All users listing</li>
+                    <li>Add user form</li>
+                    <li>Edit user form</li>
+                    <li>Delete user action</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

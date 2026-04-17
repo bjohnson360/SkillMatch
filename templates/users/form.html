@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">{{ heading }}</h1>
+                        <p class="text-secondary mb-0">Fill in the user details below.</p>
+                    </div>
+                    <a href="{{ url_for('users') }}" class="btn btn-outline-secondary">Back</a>
+                </div>
+
+                <form action="{{ form_action }}" method="post" class="row g-3">
+                    <div class="col-12">
+                        <label for="name" class="form-label">Name</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="name"
+                            name="name"
+                            value="{{ user.get('name', '') }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-12">
+                        <label for="email" class="form-label">Email</label>
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            value="{{ user.get('email', '') }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="location" class="form-label">Location</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="location"
+                            name="location"
+                            value="{{ user.get('location', '') }}"
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="experience_level" class="form-label">Experience Level</label>
+                        <select class="form-select" id="experience_level" name="experience_level" required>
+                            <option value="">Select experience level</option>
+                            {% for level in ["Beginner", "Junior", "Intermediate", "Senior", "Graduate"] %}
+                                <option
+                                    value="{{ level }}"
+                                    {% if user.get('experience_level') == level %}selected{% endif %}
+                                >
+                                    {{ level }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-flex gap-2 pt-2">
+                        <button type="submit" class="btn btn-primary">{{ button_label }}</button>
+                        <a href="{{ url_for('users') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
