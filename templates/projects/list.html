@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Projects | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">Projects</h1>
+        <p class="text-secondary mb-0">Manage project records and requirements in the SkillMatch database.</p>
+    </div>
+    <a href="{{ url_for('add_project') }}" class="btn btn-primary">Add Project</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if projects %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Difficulty</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                            <tr>
+                                <td>{{ project.project_id }}</td>
+                                <td class="fw-semibold">{{ project.title }}</td>
+                                <td class="description-cell">{{ project.description or "N/A" }}</td>
+                                <td>{{ project.difficulty }}</td>
+                                <td>{{ project.status }}</td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('edit_project', project_id=project.project_id) }}" class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+                                    <form
+                                        action="{{ url_for('delete_project', project_id=project.project_id) }}"
+                                        method="post"
+                                        class="d-inline"
+                                        onsubmit="return confirm('Delete this project?');"
+                                    >
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-4">
+                <p class="mb-3">No projects found.</p>
+                <a href="{{ url_for('add_project') }}" class="btn btn-primary">Create the first project</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
