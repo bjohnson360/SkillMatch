@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">{{ heading }}</h1>
+                        <p class="text-secondary mb-0">Fill in the project details below.</p>
+                    </div>
+                    <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">Back</a>
+                </div>
+
+                <form action="{{ form_action }}" method="post" class="row g-3">
+                    <div class="col-12">
+                        <label for="title" class="form-label">Title</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="title"
+                            name="title"
+                            value="{{ project.get('title', '') }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-12">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea
+                            class="form-control"
+                            id="description"
+                            name="description"
+                            rows="4"
+                        >{{ project.get('description', '') }}</textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="difficulty" class="form-label">Difficulty</label>
+                        <select class="form-select" id="difficulty" name="difficulty" required>
+                            <option value="">Select difficulty</option>
+                            {% for level in ["Easy", "Medium", "Hard"] %}
+                                <option
+                                    value="{{ level }}"
+                                    {% if project.get('difficulty') == level %}selected{% endif %}
+                                >
+                                    {{ level }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="">Select status</option>
+                            {% for status in ["Open", "Closed"] %}
+                                <option
+                                    value="{{ status }}"
+                                    {% if project.get('status') == status %}selected{% endif %}
+                                >
+                                    {{ status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-flex gap-2 pt-2">
+                        <button type="submit" class="btn btn-primary">{{ button_label }}</button>
+                        <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">{{ heading }}</h1>
+                        <p class="text-secondary mb-0">Fill in the application details below.</p>
+                    </div>
+                    <a href="{{ url_for('applications') }}" class="btn btn-outline-secondary">Back</a>
+                </div>
+
+                <form action="{{ form_action }}" method="post" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="user_id" class="form-label">User</label>
+                        <select class="form-select" id="user_id" name="user_id" required>
+                            <option value="">Select user</option>
+                            {% for user in users %}
+                                <option
+                                    value="{{ user.user_id }}"
+                                    {% if application.get('user_id') == user.user_id|string %}selected{% endif %}
+                                >
+                                    {{ user.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="project_id" class="form-label">Project</label>
+                        <select class="form-select" id="project_id" name="project_id" required>
+                            <option value="">Select project</option>
+                            {% for project in projects %}
+                                <option
+                                    value="{{ project.project_id }}"
+                                    {% if application.get('project_id') == project.project_id|string %}selected{% endif %}
+                                >
+                                    {{ project.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="application_date" class="form-label">Application Date</label>
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="application_date"
+                            name="application_date"
+                            value="{{ application.get('application_date', '') }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="">Select status</option>
+                            {% for status in ["Submitted", "Interview", "Accepted", "Rejected"] %}
+                                <option
+                                    value="{{ status }}"
+                                    {% if application.get('status') == status %}selected{% endif %}
+                                >
+                                    {{ status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-flex gap-2 pt-2">
+                        <button type="submit" class="btn btn-primary">{{ button_label }}</button>
+                        <a href="{{ url_for('applications') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
