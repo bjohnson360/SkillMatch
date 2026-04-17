@@ -572,6 +572,32 @@ def add_application():
     )
 
 
+@app.route("/stats")
+def stats():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                P.project_id,
+                P.title,
+                COUNT(A.application_id) AS total_applications
+            FROM Project P
+            LEFT JOIN Application A ON P.project_id = A.project_id
+            GROUP BY P.project_id, P.title
+            ORDER BY P.project_id
+            """
+        )
+        project_stats = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template("stats.html", project_stats=project_stats)
+
+
 if __name__ == "__main__":
     app.run(
         debug=True,

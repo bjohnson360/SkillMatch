@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Stats | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">Project Application Stats</h1>
+        <p class="text-secondary mb-0">View the total number of applications submitted for each project.</p>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if project_stats %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Project ID</th>
+                            <th>Project Title</th>
+                            <th>Total Applications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in project_stats %}
+                            <tr>
+                                <td>{{ stat.project_id }}</td>
+                                <td class="fw-semibold">{{ stat.title }}</td>
+                                <td>{{ stat.total_applications }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-4">
+                <p class="mb-0">No project statistics are available.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -8,7 +8,10 @@
         <h1 class="h2 mb-1">Projects</h1>
         <p class="text-secondary mb-0">Manage project records and requirements in the SkillMatch database.</p>
     </div>
-    <a href="{{ url_for('add_project') }}" class="btn btn-primary">Add Project</a>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('stats') }}" class="btn btn-outline-secondary">View Stats</a>
+        <a href="{{ url_for('add_project') }}" class="btn btn-primary">Add Project</a>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm">
