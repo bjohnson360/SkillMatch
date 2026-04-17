@@ -598,6 +598,36 @@ def stats():
     return render_template("stats.html", project_stats=project_stats)
 
 
+@app.route("/matching")
+def matching():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                U.user_id,
+                U.name AS user_name,
+                P.project_id,
+                P.title AS project_title,
+                COUNT(*) AS matching_skills
+            FROM Users U
+            JOIN UserSkill US ON U.user_id = US.user_id
+            JOIN ProjectSkill PS ON US.skill_id = PS.skill_id
+            JOIN Project P ON PS.project_id = P.project_id
+            GROUP BY U.user_id, U.name, P.project_id, P.title
+            ORDER BY matching_skills DESC, U.name, P.title
+            """
+        )
+        matches = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template("matching.html", matches=matches)
+
+
 if __name__ == "__main__":
     app.run(
         debug=True,
