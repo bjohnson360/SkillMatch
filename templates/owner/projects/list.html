@@ -1,17 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Projects | SkillMatch{% endblock %}
+{% block title %}My Projects | SkillMatch{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h2 mb-1">Admin Projects</h1>
-        <p class="text-secondary mb-0">Manage project records, ownership, and project analytics access.</p>
+        <h1 class="h2 mb-1">My Projects</h1>
+        <p class="text-secondary mb-0">Manage the projects associated with your owner account.</p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{{ url_for('stats') }}" class="btn btn-outline-secondary">View Stats</a>
-        <a href="{{ url_for('admin_add_project') }}" class="btn btn-primary">Add Project</a>
-    </div>
+    <a href="{{ url_for('owner_add_project') }}" class="btn btn-primary">Add Project</a>
 </div>
 
 <div class="card border-0 shadow-sm">
@@ -23,7 +20,6 @@
                         <tr>
                             <th>ID</th>
                             <th>Title</th>
-                            <th>Owner</th>
                             <th>Description</th>
                             <th>Difficulty</th>
                             <th>Status</th>
@@ -35,25 +31,16 @@
                             <tr>
                                 <td>{{ project.project_id }}</td>
                                 <td class="fw-semibold">{{ project.title }}</td>
-                                <td>{{ project.owner_name or "Unassigned" }}</td>
-                                <td class="description-cell">{{ project.description or "N/A" }}</td>
+                                <td>{{ project.description or "N/A" }}</td>
                                 <td>{{ project.difficulty }}</td>
                                 <td>{{ project.status }}</td>
                                 <td class="text-end">
                                     <a href="{{ url_for('owner_project_applicants', project_id=project.project_id) }}" class="btn btn-sm btn-outline-secondary">
                                         Applicants
                                     </a>
-                                    <a href="{{ url_for('admin_edit_project', project_id=project.project_id) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ url_for('owner_edit_project', project_id=project.project_id) }}" class="btn btn-sm btn-outline-primary">
                                         Edit
                                     </a>
-                                    <form
-                                        action="{{ url_for('admin_delete_project', project_id=project.project_id) }}"
-                                        method="post"
-                                        class="d-inline"
-                                        onsubmit="return confirm('Delete this project?');"
-                                    >
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                    </form>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -62,8 +49,8 @@
             </div>
         {% else %}
             <div class="p-4">
-                <p class="mb-3">No projects found.</p>
-                <a href="{{ url_for('admin_add_project') }}" class="btn btn-primary">Create the first project</a>
+                <p class="mb-3">You have not created any projects yet.</p>
+                <a href="{{ url_for('owner_add_project') }}" class="btn btn-primary">Create Your First Project</a>
             </div>
         {% endif %}
     </div>

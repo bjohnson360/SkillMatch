@@ -10,7 +10,8 @@ CREATE TABLE Users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     location VARCHAR(100),
-    experience_level VARCHAR(50) NOT NULL
+    experience_level VARCHAR(50) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'user'
 );
 
 -- =========================================
@@ -21,7 +22,12 @@ CREATE TABLE Project (
     title VARCHAR(150) NOT NULL,
     description TEXT,
     difficulty VARCHAR(50),
-    status VARCHAR(50) NOT NULL
+    status VARCHAR(50) NOT NULL,
+    owner_id INT NULL,
+    CONSTRAINT fk_project_owner
+        FOREIGN KEY (owner_id) REFERENCES Users(user_id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
 );
 
 -- =========================================
@@ -101,6 +107,7 @@ CREATE TABLE ProjectSkill (
 -- OPTIONAL INDEXES FOR PERFORMANCE
 -- =========================================
 CREATE INDEX idx_users_experience_level ON Users(experience_level);
+CREATE INDEX idx_users_role ON Users(role);
 CREATE INDEX idx_project_status ON Project(status);
 CREATE INDEX idx_skill_category ON Skill(category);
 CREATE INDEX idx_application_status ON Application(status);
@@ -109,11 +116,11 @@ CREATE INDEX idx_application_status ON Application(status);
 -- STARTER DATA
 -- =========================================
 
-INSERT INTO Users (name, email, location, experience_level) VALUES
-('Brian Johnson', 'brian@example.com', 'Atlanta', 'Graduate'),
-('Alice Carter', 'alice@example.com', 'Atlanta', 'Junior'),
-('David Lee', 'david@example.com', 'Remote', 'Intermediate'),
-('Maya Patel', 'maya@example.com', 'New York', 'Senior');
+INSERT INTO Users (name, email, location, experience_level, role) VALUES
+('Brian Johnson', 'brian@example.com', 'Atlanta', 'Graduate', 'user'),
+('Alice Carter', 'alice@example.com', 'Atlanta', 'Junior', 'user'),
+('David Lee', 'david@example.com', 'Remote', 'Intermediate', 'user'),
+('Maya Patel', 'maya@example.com', 'New York', 'Senior', 'user');
 
 INSERT INTO Skill (skill_name, category) VALUES
 ('Python', 'Programming Language'),
@@ -159,6 +166,26 @@ INSERT INTO Application (user_id, project_id, application_date, status) VALUES
 (3, 3, '2026-04-03', 'Submitted'),
 (1, 4, '2026-04-04', 'Rejected'),
 (4, 1, '2026-04-05', 'Accepted');
+
+-- =========================================
+-- MILESTONE 1 MIGRATION FOR EXISTING DATABASES
+-- Run these only if your tables already exist
+-- =========================================
+/*
+ALTER TABLE Users
+ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user';
+
+ALTER TABLE Project
+ADD COLUMN owner_id INT NULL,
+ADD CONSTRAINT fk_project_owner
+    FOREIGN KEY (owner_id) REFERENCES Users(user_id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE;
+
+UPDATE Users
+SET role = 'user'
+WHERE role IS NULL OR role = '';
+*/
 
 -- =========================================
 -- TEST QUERIES

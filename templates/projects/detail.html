@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title }} | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary btn-sm">Back to Projects</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4 p-md-5">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <span class="eyebrow">Project Opportunity</span>
+                <h1 class="display-6 fw-bold mt-3 mb-2">{{ project.title }}</h1>
+                <p class="text-secondary mb-0">
+                    {% if project.owner_name %}
+                        Posted by {{ project.owner_name }}
+                    {% else %}
+                        Project owner will be assigned soon.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge text-bg-light p-2">{{ project.difficulty }}</span>
+                <span class="badge text-bg-light p-2">{{ project.status }}</span>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <h2 class="h5 mb-3">Project Description</h2>
+                <p class="text-secondary mb-0">{{ project.description or "Detailed project information will be added soon." }}</p>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature-panel h-100">
+                    <span class="panel-label">Next Step</span>
+                    <h2 class="h5 mt-2">Take the Next Step</h2>
+                    {% if current_role == 'user' %}
+                        {% if has_applied %}
+                            <p class="text-secondary mb-3">
+                                You have already applied to this project. You can track the application from your account.
+                            </p>
+                            <a href="{{ url_for('my_applications') }}" class="btn btn-outline-secondary w-100">View My Applications</a>
+                        {% else %}
+                            <p class="text-secondary mb-3">
+                                Submit your application to this project directly from your SkillMatch account.
+                            </p>
+                            <form action="{{ url_for('apply_to_project', project_id=project.project_id) }}" method="post" class="d-grid">
+                                <button type="submit" class="btn btn-primary">Apply to Project</button>
+                            </form>
+                        {% endif %}
+                    {% elif not is_logged_in %}
+                        <p class="text-secondary mb-3">
+                            Sign in or create an account to start applying for opportunities on the platform.
+                        </p>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary w-100">Sign In to Apply</a>
+                    {% else %}
+                        <p class="text-secondary mb-3">
+                            This project can be reviewed from your current account, but applications are available to regular users.
+                        </p>
+                        <a href="{{ url_for('projects') }}" class="btn btn-primary w-100">Browse More Projects</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

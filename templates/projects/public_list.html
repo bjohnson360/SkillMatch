@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Projects | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">Browse Projects</h1>
+        <p class="text-secondary mb-0">Explore open opportunities and discover projects that match your interests.</p>
+    </div>
+</div>
+
+{% if projects %}
+    <div class="row g-4">
+        {% for project in projects %}
+            <div class="col-md-6 col-xl-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h2 class="h5 mb-0">{{ project.title }}</h2>
+                            <span class="badge text-bg-light">{{ project.difficulty }}</span>
+                        </div>
+                        <p class="text-secondary flex-grow-1">{{ project.description or "Project details will be added soon." }}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="small text-secondary">Status: {{ project.status }}</span>
+                            <a href="{{ url_for('project_detail', project_id=project.project_id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <p class="mb-0">No open projects are available right now.</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

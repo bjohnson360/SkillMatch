@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Applicants | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">Applicants for {{ project.title }}</h1>
+        <p class="text-secondary mb-0">Review users who have applied to this project.</p>
+    </div>
+    {% if current_role == 'admin' %}
+        <a href="{{ url_for('admin_projects') }}" class="btn btn-outline-secondary">Back to Admin Projects</a>
+    {% else %}
+        <a href="{{ url_for('owner_projects') }}" class="btn btn-outline-secondary">Back to My Projects</a>
+    {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if applicants %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Location</th>
+                            <th>Experience</th>
+                            <th>Applied On</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for applicant in applicants %}
+                            <tr>
+                                <td class="fw-semibold">{{ applicant.name }}</td>
+                                <td>{{ applicant.email }}</td>
+                                <td>{{ applicant.location or "N/A" }}</td>
+                                <td>{{ applicant.experience_level }}</td>
+                                <td>{{ applicant.application_date }}</td>
+                                <td>{{ applicant.status }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-4">
+                <p class="mb-0">No applicants have applied to this project yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

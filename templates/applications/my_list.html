@@ -1,16 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Applications | SkillMatch{% endblock %}
+{% block title %}My Applications | SkillMatch{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h2 mb-1">{{ page_title }}</h1>
-        <p class="text-secondary mb-0">{{ page_description }}</p>
+        <h1 class="h2 mb-1">My Applications</h1>
+        <p class="text-secondary mb-0">Review the projects you have applied to and track application status updates.</p>
     </div>
-    {% if show_add_button %}
-        <a href="{{ url_for('add_application') }}" class="btn btn-primary">Add Application</a>
-    {% endif %}
+    <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">Browse Projects</a>
 </div>
 
 <div class="card border-0 shadow-sm">
@@ -21,20 +19,24 @@
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>User</th>
                             <th>Project</th>
                             <th>Application Date</th>
                             <th>Status</th>
+                            <th class="text-end">View</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for application in applications %}
                             <tr>
                                 <td>{{ application.application_id }}</td>
-                                <td class="fw-semibold">{{ application.user_name }}</td>
-                                <td>{{ application.project_title }}</td>
+                                <td class="fw-semibold">{{ application.project_title }}</td>
                                 <td>{{ application.application_date }}</td>
                                 <td>{{ application.status }}</td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('project_detail', project_id=application.project_id) }}" class="btn btn-sm btn-outline-primary">
+                                        Project
+                                    </a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -42,10 +44,8 @@
             </div>
         {% else %}
             <div class="p-4">
-                <p class="mb-3">No applications found.</p>
-                {% if show_add_button %}
-                    <a href="{{ url_for('add_application') }}" class="btn btn-primary">Create the first application</a>
-                {% endif %}
+                <p class="mb-3">You have not applied to any projects yet.</p>
+                <a href="{{ url_for('projects') }}" class="btn btn-primary">Browse Open Projects</a>
             </div>
         {% endif %}
     </div>

@@ -12,7 +12,7 @@
                         <h1 class="h3 mb-1">{{ heading }}</h1>
                         <p class="text-secondary mb-0">Fill in the project details below.</p>
                     </div>
-                    <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">Back</a>
+                    <a href="{{ back_url }}" class="btn btn-outline-secondary">Back</a>
                 </div>
 
                 <form action="{{ form_action }}" method="post" class="row g-3">
@@ -37,6 +37,33 @@
                             rows="4"
                         >{{ project.get('description', '') }}</textarea>
                     </div>
+
+                    {% if owner_locked %}
+                        <div class="col-md-6">
+                            <label class="form-label">Project Owner</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ current_user.name }}"
+                                disabled
+                            >
+                        </div>
+                    {% else %}
+                        <div class="col-md-6">
+                            <label for="owner_id" class="form-label">Project Owner</label>
+                            <select class="form-select" id="owner_id" name="owner_id">
+                                <option value="">Select owner</option>
+                                {% for owner in owners %}
+                                    <option
+                                        value="{{ owner.user_id }}"
+                                        {% if project.get('owner_id') == owner.user_id or project.get('owner_id') == owner.user_id|string %}selected{% endif %}
+                                    >
+                                        {{ owner.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endif %}
 
                     <div class="col-md-6">
                         <label for="difficulty" class="form-label">Difficulty</label>
@@ -70,7 +97,7 @@
 
                     <div class="col-12 d-flex gap-2 pt-2">
                         <button type="submit" class="btn btn-primary">{{ button_label }}</button>
-                        <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="{{ back_url }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

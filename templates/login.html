@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Login | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-xl-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <span class="eyebrow">Welcome Back</span>
+                <h1 class="display-6 fw-bold mt-3 mb-3">Sign in to SkillMatch</h1>
+                <p class="text-secondary mb-4">
+                    Use your email address to access your SkillMatch account.
+                </p>
+
+                <form action="{{ url_for('login') }}" method="post" class="row g-3">
+                    <div class="col-12">
+                        <label for="email" class="form-label">Email</label>
+                        <input
+                            type="email"
+                            class="form-control"
+                            id="email"
+                            name="email"
+                            value="{{ form_data.get('email', '') }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="col-12 d-flex gap-2 pt-2">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                        <a href="{{ url_for('signup') }}" class="btn btn-outline-secondary">Create Account</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

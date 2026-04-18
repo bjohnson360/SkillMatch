@@ -5,10 +5,11 @@
 {% block page_intro %}
 <div class="page-intro page-intro-home">
     <div>
-        <span class="page-kicker">System Workspace</span>
-        <h1 class="page-title">Welcome to SkillMatch</h1>
+        <span class="page-kicker">Talent Meets Opportunity</span>
+        <h1 class="page-title">Discover projects that match your skills.</h1>
         <p class="page-description mb-0">
-            Centralized access to user records, project requirements, skills data, and application workflows.
+            SkillMatch helps students, developers, and project teams connect through skill-based opportunities
+            in one shared platform.
         </p>
     </div>
 </div>
@@ -18,32 +19,70 @@
 <section class="hero-card rounded-4 p-5">
     <div class="row align-items-center g-4">
         <div class="col-lg-7">
-            <span class="eyebrow">Database-Driven Matching System</span>
-            <h1 class="display-5 fw-bold mt-3 mb-3">SkillMatch: Talent and Project Matching System</h1>
+            <span class="eyebrow">Public Opportunity Platform</span>
+            <h1 class="display-5 fw-bold mt-3 mb-3">Find projects, showcase your skills, and connect with real opportunities.</h1>
             <p class="lead text-secondary mb-4">
-                SkillMatch is a web-based information system that helps manage users, skills,
-                projects, and applications in a centralized database. The platform supports
-                structured data management and lays the foundation for skill-based matching
-                between users and projects.
+                SkillMatch is a web-based platform for exploring open projects, tracking applicant interest,
+                and laying the groundwork for better skill-based matching between users and project teams.
             </p>
-            <a href="{{ url_for('users') }}" class="btn btn-primary btn-lg">View Users</a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('projects') }}" class="btn btn-primary btn-lg">Browse Projects</a>
+                {% if not is_logged_in %}
+                    <a href="{{ url_for('signup') }}" class="btn btn-outline-secondary btn-lg">Sign Up</a>
+                {% elif current_role == 'user' %}
+                    <a href="{{ url_for('my_applications') }}" class="btn btn-outline-secondary btn-lg">My Applications</a>
+                {% elif current_role == 'owner' %}
+                    <a href="{{ url_for('owner_projects') }}" class="btn btn-outline-secondary btn-lg">My Projects</a>
+                {% elif current_role == 'admin' %}
+                    <a href="{{ url_for('admin_projects') }}" class="btn btn-outline-secondary btn-lg">Admin Projects</a>
+                {% endif %}
+            </div>
         </div>
         <div class="col-lg-5">
             <div class="feature-panel overview-panel">
-                <span class="panel-label">Core Modules</span>
-                <h2 class="h4 mb-3 mt-2">System Overview</h2>
+                <span class="panel-label">Why SkillMatch</span>
+                <h2 class="h4 mb-3 mt-2">Platform Highlights</h2>
                 <p class="text-secondary mb-4">
-                    Access key data domains through a centralized interface designed for
-                    structured record management and future matching workflows.
+                    Explore projects, evaluate fit, and prepare for a more personalized matching experience
+                    as the platform grows.
                 </p>
                 <ul class="feature-list overview-list">
-                    <li>Manage user records</li>
-                    <li>Track projects and requirements</li>
-                    <li>Store skills and proficiency levels</li>
-                    <li>Monitor applications and matching data</li>
+                    <li>Browse open opportunities</li>
+                    <li>Review project requirements</li>
+                    <li>Track applications and activity</li>
+                    <li>Support future skill-based matching</li>
                 </ul>
             </div>
         </div>
     </div>
 </section>
+
+{% if featured_projects %}
+    <section class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="h3 mb-1">Featured Open Projects</h2>
+                <p class="text-secondary mb-0">A quick look at current opportunities available on the platform.</p>
+            </div>
+            <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">View All</a>
+        </div>
+
+        <div class="row g-4">
+            {% for project in featured_projects %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h3 class="h5">{{ project.title }}</h3>
+                            <p class="text-secondary">{{ project.description or "Project details will be added soon." }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge text-bg-light">{{ project.difficulty }}</span>
+                                <a href="{{ url_for('project_detail', project_id=project.project_id) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
 {% endblock %}
