@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Analytics | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">Admin Analytics Dashboard</h1>
+        <p class="text-secondary mb-0">Track platform usage, project demand, and recommendation-related compatibility trends.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-secondary small mb-2">Regular Users</div>
+                <div class="display-6 fw-bold">{{ summary.total_users }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-secondary small mb-2">Project Owners</div>
+                <div class="display-6 fw-bold">{{ summary.total_owners }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-secondary small mb-2">Projects</div>
+                <div class="display-6 fw-bold">{{ summary.total_projects }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-secondary small mb-2">Applications</div>
+                <div class="display-6 fw-bold">{{ summary.total_applications }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-0">
+                <div class="p-4 pb-0">
+                    <h2 class="h5 mb-1">Most In-Demand Skills</h2>
+                    <p class="text-secondary mb-0">Skills requested most often across project requirements.</p>
+                </div>
+                {% if in_demand_skills %}
+                    <div class="table-responsive mt-3">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Skill</th>
+                                    <th>Category</th>
+                                    <th>Project Usage</th>
+                                    <th>Avg. Required Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for skill in in_demand_skills %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ skill.skill_name }}</td>
+                                        <td>{{ skill.category }}</td>
+                                        <td>{{ skill.project_usage }}</td>
+                                        <td>{{ skill.avg_required_level }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="p-4">
+                        <p class="mb-0">No project skill data is available.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-0">
+                <div class="p-4 pb-0">
+                    <h2 class="h5 mb-1">Average Compatibility by Experience Level</h2>
+                    <p class="text-secondary mb-0">Average match percentage for submitted applications using the current recommendation logic.</p>
+                </div>
+                {% if compatibility_by_experience %}
+                    <div class="table-responsive mt-3">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Experience Level</th>
+                                    <th>Avg. Compatibility</th>
+                                    <th>Total Applications</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in compatibility_by_experience %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ row.experience_level }}</td>
+                                        <td>{{ row.avg_compatibility_score }}%</td>
+                                        <td>{{ row.total_applications }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="p-4">
+                        <p class="mb-0">No compatibility analytics are available yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body p-0">
+        <div class="p-4 pb-0">
+            <h2 class="h5 mb-1">Application Counts Per Project</h2>
+            <p class="text-secondary mb-0">Overview of application activity across all projects on the platform.</p>
+        </div>
+        {% if project_application_counts %}
+            <div class="table-responsive mt-3">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Project</th>
+                            <th>Owner</th>
+                            <th>Total Applications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in project_application_counts %}
+                            <tr>
+                                <td class="fw-semibold">{{ project.title }}</td>
+                                <td>{{ project.owner_name or "Unassigned" }}</td>
+                                <td>{{ project.total_applications }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-4">
+                <p class="mb-0">No project application data is available.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

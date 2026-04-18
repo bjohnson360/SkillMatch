@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendations | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">Recommended Projects</h1>
+        <p class="text-secondary mb-0">
+            These recommendations are based on overlap between your skills and each project's required skills.
+        </p>
+    </div>
+    <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">Browse All Projects</a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if recommended_projects %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Project</th>
+                            <th>Owner</th>
+                            <th>Difficulty</th>
+                            <th>Matching Skills</th>
+                            <th>Total Required</th>
+                            <th>Match %</th>
+                            <th class="text-end">View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in recommended_projects %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ project.title }}</div>
+                                    <div class="small text-secondary">{{ project.description or "Project details will be added soon." }}</div>
+                                </td>
+                                <td>{{ project.owner_name or "Unassigned" }}</td>
+                                <td>{{ project.difficulty }}</td>
+                                <td>{{ project.matching_skills }}</td>
+                                <td>{{ project.total_required_skills }}</td>
+                                <td>{{ project.match_percentage }}%</td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('project_detail', project_id=project.project_id) }}" class="btn btn-sm btn-outline-primary">
+                                        View Project
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-4">
+                <p class="mb-3">No recommendations are available yet based on your current skill profile.</p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('my_skills') }}" class="btn btn-primary">Update My Skills</a>
+                    <a href="{{ url_for('projects') }}" class="btn btn-outline-secondary">Browse Projects</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

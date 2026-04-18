@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | SkillMatch{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">{{ heading }}</h1>
+                        <p class="text-secondary mb-0">Manage required skills for {{ project.title }}.</p>
+                    </div>
+                    <a href="{{ url_for('owner_project_skills', project_id=project.project_id) }}" class="btn btn-outline-secondary">Back</a>
+                </div>
+
+                <form action="{{ form_action }}" method="post" class="row g-3">
+                    <div class="col-12">
+                        <label for="skill_id" class="form-label">Skill</label>
+                        {% if is_edit %}
+                            <input type="hidden" name="skill_id" value="{{ form_data.get('skill_id', '') }}">
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ form_data.get('skill_name', '') }}{% if form_data.get('category') %} ({{ form_data.get('category') }}){% endif %}"
+                                disabled
+                            >
+                        {% else %}
+                            <select class="form-select" id="skill_id" name="skill_id" required>
+                                <option value="">Select skill</option>
+                                {% for skill in skill_options %}
+                                    <option
+                                        value="{{ skill.skill_id }}"
+                                        {% if form_data.get('skill_id') == skill.skill_id|string %}selected{% endif %}
+                                    >
+                                        {{ skill.skill_name }} ({{ skill.category }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="required_level" class="form-label">Required Level</label>
+                        <select class="form-select" id="required_level" name="required_level" required>
+                            <option value="">Select level</option>
+                            {% for level in [1, 2, 3, 4, 5] %}
+                                <option
+                                    value="{{ level }}"
+                                    {% if form_data.get('required_level') == level or form_data.get('required_level') == level|string %}selected{% endif %}
+                                >
+                                    {{ level }} / 5
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 d-flex gap-2 pt-2">
+                        <button type="submit" class="btn btn-primary">{{ button_label }}</button>
+                        <a href="{{ url_for('owner_project_skills', project_id=project.project_id) }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

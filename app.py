@@ -223,6 +223,132 @@ def user_has_applied(user_id, project_id):
     return existing_application is not None
 
 
+def get_all_skills():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT skill_id, skill_name, category
+            FROM Skill
+            ORDER BY skill_name
+            """
+        )
+        skills = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return skills
+
+
+def get_available_skills_for_user(user_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT S.skill_id, S.skill_name, S.category
+            FROM Skill S
+            WHERE S.skill_id NOT IN (
+                SELECT US.skill_id
+                FROM UserSkill US
+                WHERE US.user_id = %s
+            )
+            ORDER BY S.skill_name
+            """,
+            (user_id,),
+        )
+        skills = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return skills
+
+
+def get_available_skills_for_project(project_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT S.skill_id, S.skill_name, S.category
+            FROM Skill S
+            WHERE S.skill_id NOT IN (
+                SELECT PS.skill_id
+                FROM ProjectSkill PS
+                WHERE PS.project_id = %s
+            )
+            ORDER BY S.skill_name
+            """,
+            (project_id,),
+        )
+        skills = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return skills
+
+
+def get_user_skill(user_id, skill_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                US.user_id,
+                US.skill_id,
+                US.proficiency_level,
+                S.skill_name,
+                S.category
+            FROM UserSkill US
+            JOIN Skill S ON US.skill_id = S.skill_id
+            WHERE US.user_id = %s AND US.skill_id = %s
+            """,
+            (user_id, skill_id),
+        )
+        user_skill = cursor.fetchone()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return user_skill
+
+
+def get_project_skill(project_id, skill_id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                PS.project_id,
+                PS.skill_id,
+                PS.required_level,
+                S.skill_name,
+                S.category
+            FROM ProjectSkill PS
+            JOIN Skill S ON PS.skill_id = S.skill_id
+            WHERE PS.project_id = %s AND PS.skill_id = %s
+            """,
+            (project_id, skill_id),
+        )
+        project_skill = cursor.fetchone()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return project_skill
+
+
 @app.route("/")
 def home():
     connection = get_db_connection()
@@ -1101,6 +1227,456 @@ def owner_project_applicants(project_id):
     )
 
 
+@app.route("/my-skills")
+@roles_required("user")
+def my_skills():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                US.skill_id,
+                S.skill_name,
+                S.category,
+                US.proficiency_level
+            FROM UserSkill US
+            JOIN Skill S ON US.skill_id = S.skill_id
+            WHERE US.user_id = %s
+            ORDER BY S.skill_name
+            """,
+            (session["user_id"],),
+        )
+        user_skills = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template("skills/my_list.html", user_skills=user_skills)
+
+
+@app.route("/my-skills/add", methods=["GET", "POST"])
+@roles_required("user")
+def add_my_skill():
+    skill_options = get_available_skills_for_user(session["user_id"])
+
+    if request.method == "POST":
+        form_data = {
+            "skill_id": request.form.get("skill_id", "").strip(),
+            "proficiency_level": request.form.get("proficiency_level", "").strip(),
+        }
+
+        if not form_data["skill_id"] or not form_data["proficiency_level"]:
+            flash("Skill and proficiency level are required.", "danger")
+            return render_template(
+                "skills/form.html",
+                title="Add Skill",
+                heading="Add Skill",
+                button_label="Add Skill",
+                form_data=form_data,
+                skill_options=skill_options,
+                is_edit=False,
+                form_action=url_for("add_my_skill"),
+            )
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                """
+                INSERT INTO UserSkill (user_id, skill_id, proficiency_level)
+                VALUES (%s, %s, %s)
+                """,
+                (session["user_id"], form_data["skill_id"], form_data["proficiency_level"]),
+            )
+            connection.commit()
+            flash("Skill added to your profile.", "success")
+            return redirect(url_for("my_skills"))
+        except Error as exc:
+            connection.rollback()
+            flash(f"Could not add skill: {exc.msg}", "danger")
+        finally:
+            cursor.close()
+            connection.close()
+
+        return render_template(
+            "skills/form.html",
+            title="Add Skill",
+            heading="Add Skill",
+            button_label="Add Skill",
+            form_data=form_data,
+            skill_options=skill_options,
+            is_edit=False,
+            form_action=url_for("add_my_skill"),
+        )
+
+    return render_template(
+        "skills/form.html",
+        title="Add Skill",
+        heading="Add Skill",
+        button_label="Add Skill",
+        form_data={},
+        skill_options=skill_options,
+        is_edit=False,
+        form_action=url_for("add_my_skill"),
+    )
+
+
+@app.route("/my-skills/edit/<int:skill_id>", methods=["GET", "POST"])
+@roles_required("user")
+def edit_my_skill(skill_id):
+    user_skill = get_user_skill(session["user_id"], skill_id)
+    if not user_skill:
+        flash("Skill not found on your profile.", "warning")
+        return redirect(url_for("my_skills"))
+
+    if request.method == "POST":
+        form_data = {
+            "skill_id": skill_id,
+            "proficiency_level": request.form.get("proficiency_level", "").strip(),
+            "skill_name": user_skill["skill_name"],
+            "category": user_skill["category"],
+        }
+
+        if not form_data["proficiency_level"]:
+            flash("Proficiency level is required.", "danger")
+            return render_template(
+                "skills/form.html",
+                title="Edit Skill",
+                heading="Edit Skill",
+                button_label="Update Skill",
+                form_data=form_data,
+                skill_options=[],
+                is_edit=True,
+                form_action=url_for("edit_my_skill", skill_id=skill_id),
+            )
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                """
+                UPDATE UserSkill
+                SET proficiency_level = %s
+                WHERE user_id = %s AND skill_id = %s
+                """,
+                (form_data["proficiency_level"], session["user_id"], skill_id),
+            )
+            connection.commit()
+            flash("Skill updated successfully.", "success")
+            return redirect(url_for("my_skills"))
+        except Error as exc:
+            connection.rollback()
+            flash(f"Could not update skill: {exc.msg}", "danger")
+        finally:
+            cursor.close()
+            connection.close()
+
+        return render_template(
+            "skills/form.html",
+            title="Edit Skill",
+            heading="Edit Skill",
+            button_label="Update Skill",
+            form_data=form_data,
+            skill_options=[],
+            is_edit=True,
+            form_action=url_for("edit_my_skill", skill_id=skill_id),
+        )
+
+    return render_template(
+        "skills/form.html",
+        title="Edit Skill",
+        heading="Edit Skill",
+        button_label="Update Skill",
+        form_data=user_skill,
+        skill_options=[],
+        is_edit=True,
+        form_action=url_for("edit_my_skill", skill_id=skill_id),
+    )
+
+
+@app.route("/my-skills/delete/<int:skill_id>", methods=["POST"])
+@roles_required("user")
+def delete_my_skill(skill_id):
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            "DELETE FROM UserSkill WHERE user_id = %s AND skill_id = %s",
+            (session["user_id"], skill_id),
+        )
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            flash("Skill not found on your profile.", "warning")
+        else:
+            flash("Skill removed from your profile.", "success")
+    except Error as exc:
+        connection.rollback()
+        flash(f"Could not remove skill: {exc.msg}", "danger")
+    finally:
+        cursor.close()
+        connection.close()
+
+    return redirect(url_for("my_skills"))
+
+
+@app.route("/owner/projects/<int:project_id>/skills")
+@roles_required("owner", "admin")
+def owner_project_skills(project_id):
+    project = get_project_by_id(project_id)
+    if not project:
+        flash("Project not found.", "warning")
+        if session.get("role") == "admin":
+            return redirect(url_for("admin_projects"))
+        return redirect(url_for("owner_projects"))
+
+    if not project_access_allowed(project):
+        flash("You can only manage skills for your own projects.", "danger")
+        return redirect(url_for("owner_projects"))
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                PS.skill_id,
+                S.skill_name,
+                S.category,
+                PS.required_level
+            FROM ProjectSkill PS
+            JOIN Skill S ON PS.skill_id = S.skill_id
+            WHERE PS.project_id = %s
+            ORDER BY S.skill_name
+            """,
+            (project_id,),
+        )
+        project_skills = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template(
+        "owner/projects/skills.html",
+        project=project,
+        project_skills=project_skills,
+    )
+
+
+@app.route("/owner/projects/<int:project_id>/skills/add", methods=["GET", "POST"])
+@roles_required("owner", "admin")
+def add_project_skill(project_id):
+    project = get_project_by_id(project_id)
+    if not project:
+        flash("Project not found.", "warning")
+        if session.get("role") == "admin":
+            return redirect(url_for("admin_projects"))
+        return redirect(url_for("owner_projects"))
+
+    if not project_access_allowed(project):
+        flash("You can only manage skills for your own projects.", "danger")
+        return redirect(url_for("owner_projects"))
+
+    skill_options = get_available_skills_for_project(project_id)
+
+    if request.method == "POST":
+        form_data = {
+            "skill_id": request.form.get("skill_id", "").strip(),
+            "required_level": request.form.get("required_level", "").strip(),
+        }
+
+        if not form_data["skill_id"] or not form_data["required_level"]:
+            flash("Skill and required level are required.", "danger")
+            return render_template(
+                "owner/projects/skill_form.html",
+                title="Add Project Skill",
+                heading="Add Project Skill",
+                button_label="Add Skill",
+                project=project,
+                form_data=form_data,
+                skill_options=skill_options,
+                is_edit=False,
+                form_action=url_for("add_project_skill", project_id=project_id),
+            )
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                """
+                INSERT INTO ProjectSkill (project_id, skill_id, required_level)
+                VALUES (%s, %s, %s)
+                """,
+                (project_id, form_data["skill_id"], form_data["required_level"]),
+            )
+            connection.commit()
+            flash("Project skill added successfully.", "success")
+            return redirect(url_for("owner_project_skills", project_id=project_id))
+        except Error as exc:
+            connection.rollback()
+            flash(f"Could not add project skill: {exc.msg}", "danger")
+        finally:
+            cursor.close()
+            connection.close()
+
+        return render_template(
+            "owner/projects/skill_form.html",
+            title="Add Project Skill",
+            heading="Add Project Skill",
+            button_label="Add Skill",
+            project=project,
+            form_data=form_data,
+            skill_options=skill_options,
+            is_edit=False,
+            form_action=url_for("add_project_skill", project_id=project_id),
+        )
+
+    return render_template(
+        "owner/projects/skill_form.html",
+        title="Add Project Skill",
+        heading="Add Project Skill",
+        button_label="Add Skill",
+        project=project,
+        form_data={},
+        skill_options=skill_options,
+        is_edit=False,
+        form_action=url_for("add_project_skill", project_id=project_id),
+    )
+
+
+@app.route("/owner/projects/<int:project_id>/skills/edit/<int:skill_id>", methods=["GET", "POST"])
+@roles_required("owner", "admin")
+def edit_project_skill(project_id, skill_id):
+    project = get_project_by_id(project_id)
+    if not project:
+        flash("Project not found.", "warning")
+        if session.get("role") == "admin":
+            return redirect(url_for("admin_projects"))
+        return redirect(url_for("owner_projects"))
+
+    if not project_access_allowed(project):
+        flash("You can only manage skills for your own projects.", "danger")
+        return redirect(url_for("owner_projects"))
+
+    project_skill = get_project_skill(project_id, skill_id)
+    if not project_skill:
+        flash("Project skill not found.", "warning")
+        return redirect(url_for("owner_project_skills", project_id=project_id))
+
+    if request.method == "POST":
+        form_data = {
+            "skill_id": skill_id,
+            "required_level": request.form.get("required_level", "").strip(),
+            "skill_name": project_skill["skill_name"],
+            "category": project_skill["category"],
+        }
+
+        if not form_data["required_level"]:
+            flash("Required level is required.", "danger")
+            return render_template(
+                "owner/projects/skill_form.html",
+                title="Edit Project Skill",
+                heading="Edit Project Skill",
+                button_label="Update Skill",
+                project=project,
+                form_data=form_data,
+                skill_options=[],
+                is_edit=True,
+                form_action=url_for("edit_project_skill", project_id=project_id, skill_id=skill_id),
+            )
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute(
+                """
+                UPDATE ProjectSkill
+                SET required_level = %s
+                WHERE project_id = %s AND skill_id = %s
+                """,
+                (form_data["required_level"], project_id, skill_id),
+            )
+            connection.commit()
+            flash("Project skill updated successfully.", "success")
+            return redirect(url_for("owner_project_skills", project_id=project_id))
+        except Error as exc:
+            connection.rollback()
+            flash(f"Could not update project skill: {exc.msg}", "danger")
+        finally:
+            cursor.close()
+            connection.close()
+
+        return render_template(
+            "owner/projects/skill_form.html",
+            title="Edit Project Skill",
+            heading="Edit Project Skill",
+            button_label="Update Skill",
+            project=project,
+            form_data=form_data,
+            skill_options=[],
+            is_edit=True,
+            form_action=url_for("edit_project_skill", project_id=project_id, skill_id=skill_id),
+        )
+
+    return render_template(
+        "owner/projects/skill_form.html",
+        title="Edit Project Skill",
+        heading="Edit Project Skill",
+        button_label="Update Skill",
+        project=project,
+        form_data=project_skill,
+        skill_options=[],
+        is_edit=True,
+        form_action=url_for("edit_project_skill", project_id=project_id, skill_id=skill_id),
+    )
+
+
+@app.route("/owner/projects/<int:project_id>/skills/delete/<int:skill_id>", methods=["POST"])
+@roles_required("owner", "admin")
+def delete_project_skill(project_id, skill_id):
+    project = get_project_by_id(project_id)
+    if not project:
+        flash("Project not found.", "warning")
+        if session.get("role") == "admin":
+            return redirect(url_for("admin_projects"))
+        return redirect(url_for("owner_projects"))
+
+    if not project_access_allowed(project):
+        flash("You can only manage skills for your own projects.", "danger")
+        return redirect(url_for("owner_projects"))
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute(
+            "DELETE FROM ProjectSkill WHERE project_id = %s AND skill_id = %s",
+            (project_id, skill_id),
+        )
+        connection.commit()
+
+        if cursor.rowcount == 0:
+            flash("Project skill not found.", "warning")
+        else:
+            flash("Project skill removed successfully.", "success")
+    except Error as exc:
+        connection.rollback()
+        flash(f"Could not remove project skill: {exc.msg}", "danger")
+    finally:
+        cursor.close()
+        connection.close()
+
+    return redirect(url_for("owner_project_skills", project_id=project_id))
+
+
 @app.route("/my-applications")
 @roles_required("user")
 def my_applications():
@@ -1129,6 +1705,64 @@ def my_applications():
         connection.close()
 
     return render_template("applications/my_list.html", applications=applications_list)
+
+
+@app.route("/recommendations")
+@roles_required("user")
+def recommendations():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        cursor.execute(
+            """
+            SELECT
+                P.project_id,
+                P.title,
+                P.description,
+                P.difficulty,
+                U.name AS owner_name,
+                COUNT(DISTINCT CASE
+                    WHEN US.skill_id IS NOT NULL THEN PS.skill_id
+                END) AS matching_skills,
+                COUNT(DISTINCT PS.skill_id) AS total_required_skills,
+                ROUND(
+                    (
+                        COUNT(DISTINCT CASE
+                            WHEN US.skill_id IS NOT NULL THEN PS.skill_id
+                        END) / NULLIF(COUNT(DISTINCT PS.skill_id), 0)
+                    ) * 100,
+                    1
+                ) AS match_percentage
+            FROM Project P
+            LEFT JOIN Users U ON P.owner_id = U.user_id
+            LEFT JOIN ProjectSkill PS ON P.project_id = PS.project_id
+            LEFT JOIN UserSkill US
+                ON US.user_id = %s
+                AND US.skill_id = PS.skill_id
+                AND US.proficiency_level >= PS.required_level
+            LEFT JOIN Application A
+                ON A.project_id = P.project_id
+                AND A.user_id = %s
+            WHERE P.status = 'Open'
+                AND A.application_id IS NULL
+            GROUP BY P.project_id, P.title, P.description, P.difficulty, U.name
+            HAVING COUNT(DISTINCT CASE
+                WHEN US.skill_id IS NOT NULL THEN PS.skill_id
+            END) > 0
+            ORDER BY match_percentage DESC, matching_skills DESC, P.title
+            """,
+            (session["user_id"], session["user_id"]),
+        )
+        recommended_projects = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template(
+        "recommendations.html",
+        recommended_projects=recommended_projects,
+    )
 
 
 @app.route("/applications")
@@ -1231,7 +1865,7 @@ def add_application():
             )
             connection.commit()
             flash("Application added successfully.", "success")
-            return redirect(url_for("applications"))
+            return redirect(url_for("my_applications"))
         except Error as exc:
             connection.rollback()
             flash(f"Could not add application: {exc.msg}", "danger")
@@ -1239,17 +1873,17 @@ def add_application():
             cursor.close()
             connection.close()
 
-            return render_template(
-                "applications/form.html",
-                title="Add Application",
-                heading="Add Application",
-                button_label="Create Application",
-                application=form_data,
-                users=users_list,
-                projects=projects_list,
-                lock_user=True,
-                form_action=url_for("add_application"),
-            )
+        return render_template(
+            "applications/form.html",
+            title="Add Application",
+            heading="Add Application",
+            button_label="Create Application",
+            application=form_data,
+            users=users_list,
+            projects=projects_list,
+            lock_user=True,
+            form_action=url_for("add_application"),
+        )
 
     return render_template(
         "applications/form.html",
@@ -1267,9 +1901,9 @@ def add_application():
     )
 
 
-@app.route("/stats")
+@app.route("/admin/analytics")
 @roles_required("admin")
-def stats():
+def admin_analytics():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
 
@@ -1277,21 +1911,212 @@ def stats():
         cursor.execute(
             """
             SELECT
-                P.project_id,
-                P.title,
-                COUNT(A.application_id) AS total_applications
-            FROM Project P
-            LEFT JOIN Application A ON P.project_id = A.project_id
-            GROUP BY P.project_id, P.title
-            ORDER BY P.project_id
+                (SELECT COUNT(*) FROM Users WHERE role = 'user') AS total_users,
+                (SELECT COUNT(*) FROM Users WHERE role = 'owner') AS total_owners,
+                (SELECT COUNT(*) FROM Project) AS total_projects,
+                (SELECT COUNT(*) FROM Application) AS total_applications
             """
         )
-        project_stats = cursor.fetchall()
+        summary = cursor.fetchone()
+
+        cursor.execute(
+            """
+            SELECT
+                S.skill_name,
+                S.category,
+                COUNT(*) AS project_usage,
+                ROUND(AVG(PS.required_level), 1) AS avg_required_level
+            FROM ProjectSkill PS
+            JOIN Skill S ON PS.skill_id = S.skill_id
+            GROUP BY S.skill_id, S.skill_name, S.category
+            ORDER BY project_usage DESC, avg_required_level DESC, S.skill_name
+            LIMIT 5
+            """
+        )
+        in_demand_skills = cursor.fetchall()
+
+        cursor.execute(
+            """
+            SELECT
+                P.project_id,
+                P.title,
+                U.name AS owner_name,
+                COUNT(A.application_id) AS total_applications
+            FROM Project P
+            LEFT JOIN Users U ON P.owner_id = U.user_id
+            LEFT JOIN Application A ON P.project_id = A.project_id
+            GROUP BY P.project_id, P.title, U.name
+            ORDER BY total_applications DESC, P.title
+            """
+        )
+        project_application_counts = cursor.fetchall()
+
+        cursor.execute(
+            """
+            SELECT
+                U.experience_level,
+                ROUND(AVG(COALESCE(C.compatibility_score, 0)), 1) AS avg_compatibility_score,
+                COUNT(A.application_id) AS total_applications
+            FROM Application A
+            JOIN Users U ON A.user_id = U.user_id
+            LEFT JOIN (
+                SELECT
+                    A2.application_id,
+                    ROUND(
+                        (
+                            COUNT(DISTINCT CASE
+                                WHEN US.skill_id IS NOT NULL THEN PS.skill_id
+                            END) / NULLIF(COUNT(DISTINCT PS.skill_id), 0)
+                        ) * 100,
+                        1
+                    ) AS compatibility_score
+                FROM Application A2
+                LEFT JOIN ProjectSkill PS ON A2.project_id = PS.project_id
+                LEFT JOIN UserSkill US
+                    ON US.user_id = A2.user_id
+                    AND US.skill_id = PS.skill_id
+                    AND US.proficiency_level >= PS.required_level
+                GROUP BY A2.application_id
+            ) C ON C.application_id = A.application_id
+            GROUP BY U.experience_level
+            ORDER BY avg_compatibility_score DESC, U.experience_level
+            """
+        )
+        compatibility_by_experience = cursor.fetchall()
     finally:
         cursor.close()
         connection.close()
 
-    return render_template("stats.html", project_stats=project_stats)
+    return render_template(
+        "admin/analytics.html",
+        summary=summary,
+        in_demand_skills=in_demand_skills,
+        project_application_counts=project_application_counts,
+        compatibility_by_experience=compatibility_by_experience,
+    )
+
+
+@app.route("/owner/analytics")
+@app.route("/owner/stats")
+@roles_required("owner", "admin")
+def owner_analytics():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    if session.get("role") == "admin":
+        owner_filter_clause = ""
+        owner_params = ()
+    else:
+        owner_filter_clause = "WHERE P.owner_id = %s"
+        owner_params = (session["user_id"],)
+
+    try:
+        cursor.execute(
+            f"""
+            SELECT
+                COUNT(DISTINCT P.project_id) AS total_projects,
+                COUNT(DISTINCT CASE WHEN P.status = 'Open' THEN P.project_id END) AS open_projects,
+                COUNT(DISTINCT A.application_id) AS total_applications_received,
+                ROUND(AVG(COALESCE(C.compatibility_score, 0)), 1) AS avg_compatibility_score
+            FROM Project P
+            LEFT JOIN Application A ON P.project_id = A.project_id
+            LEFT JOIN (
+                SELECT
+                    A2.application_id,
+                    ROUND(
+                        (
+                            COUNT(DISTINCT CASE
+                                WHEN US.skill_id IS NOT NULL THEN PS.skill_id
+                            END) / NULLIF(COUNT(DISTINCT PS.skill_id), 0)
+                        ) * 100,
+                        1
+                    ) AS compatibility_score
+                FROM Application A2
+                LEFT JOIN ProjectSkill PS ON A2.project_id = PS.project_id
+                LEFT JOIN UserSkill US
+                    ON US.user_id = A2.user_id
+                    AND US.skill_id = PS.skill_id
+                    AND US.proficiency_level >= PS.required_level
+                GROUP BY A2.application_id
+            ) C ON C.application_id = A.application_id
+            {owner_filter_clause}
+            """,
+            owner_params,
+        )
+        summary = cursor.fetchone()
+
+        cursor.execute(
+            f"""
+            SELECT
+                P.project_id,
+                P.title,
+                P.status,
+                COUNT(DISTINCT A.application_id) AS total_applicants,
+                ROUND(AVG(COALESCE(C.compatibility_score, 0)), 1) AS avg_compatibility_score
+            FROM Project P
+            LEFT JOIN Application A ON P.project_id = A.project_id
+            LEFT JOIN (
+                SELECT
+                    A2.application_id,
+                    ROUND(
+                        (
+                            COUNT(DISTINCT CASE
+                                WHEN US.skill_id IS NOT NULL THEN PS.skill_id
+                            END) / NULLIF(COUNT(DISTINCT PS.skill_id), 0)
+                        ) * 100,
+                        1
+                    ) AS compatibility_score
+                FROM Application A2
+                LEFT JOIN ProjectSkill PS ON A2.project_id = PS.project_id
+                LEFT JOIN UserSkill US
+                    ON US.user_id = A2.user_id
+                    AND US.skill_id = PS.skill_id
+                    AND US.proficiency_level >= PS.required_level
+                GROUP BY A2.application_id
+            ) C ON C.application_id = A.application_id
+            {owner_filter_clause}
+            GROUP BY P.project_id, P.title, P.status
+            ORDER BY total_applicants DESC, avg_compatibility_score DESC, P.title
+            """,
+            owner_params,
+        )
+        project_analytics = cursor.fetchall()
+
+        cursor.execute(
+            f"""
+            SELECT
+                S.skill_name,
+                S.category,
+                COUNT(*) AS project_usage,
+                ROUND(AVG(PS.required_level), 1) AS avg_required_level
+            FROM ProjectSkill PS
+            JOIN Skill S ON PS.skill_id = S.skill_id
+            JOIN Project P ON PS.project_id = P.project_id
+            {owner_filter_clause}
+            GROUP BY S.skill_id, S.skill_name, S.category
+            ORDER BY project_usage DESC, avg_required_level DESC, S.skill_name
+            LIMIT 5
+            """,
+            owner_params,
+        )
+        requested_skills = cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+    return render_template(
+        "owner/analytics.html",
+        summary=summary,
+        project_analytics=project_analytics,
+        requested_skills=requested_skills,
+        is_admin_view=session.get("role") == "admin",
+    )
+
+
+@app.route("/stats")
+@roles_required("admin")
+def stats():
+    return redirect(url_for("admin_analytics"))
 
 
 @app.route("/matching")

@@ -26,20 +26,23 @@
                 {% elif current_role == 'user' %}
                     <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a>
                     <a class="nav-link {% if request.endpoint in ['projects', 'project_detail'] %}active{% endif %}" href="{{ url_for('projects') }}">Projects</a>
+                    <a class="nav-link {% if request.endpoint == 'recommendations' %}active{% endif %}" href="{{ url_for('recommendations') }}">Recommendations</a>
+                    <a class="nav-link {% if request.endpoint in ['my_skills', 'add_my_skill', 'edit_my_skill'] %}active{% endif %}" href="{{ url_for('my_skills') }}">My Skills</a>
                     <a class="nav-link {% if request.endpoint in ['my_applications', 'add_application'] %}active{% endif %}" href="{{ url_for('my_applications') }}">My Applications</a>
                     <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                 {% elif current_role == 'owner' %}
                     <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a>
                     <a class="nav-link {% if request.endpoint in ['projects', 'project_detail'] %}active{% endif %}" href="{{ url_for('projects') }}">Projects</a>
-                    <a class="nav-link {% if request.endpoint in ['owner_projects', 'owner_edit_project', 'owner_project_applicants'] %}active{% endif %}" href="{{ url_for('owner_projects') }}">My Projects</a>
+                    <a class="nav-link {% if request.endpoint in ['owner_projects', 'owner_edit_project', 'owner_project_applicants', 'owner_project_skills', 'add_project_skill', 'edit_project_skill'] %}active{% endif %}" href="{{ url_for('owner_projects') }}">My Projects</a>
+                    <a class="nav-link {% if request.endpoint == 'owner_analytics' %}active{% endif %}" href="{{ url_for('owner_analytics') }}">Analytics</a>
                     <a class="nav-link {% if request.endpoint == 'owner_add_project' %}active{% endif %}" href="{{ url_for('owner_add_project') }}">Add Project</a>
                     <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                 {% elif current_role == 'admin' %}
                     <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}">Home</a>
                     <a class="nav-link {% if request.endpoint in ['projects', 'project_detail'] %}active{% endif %}" href="{{ url_for('projects') }}">Projects</a>
                     <a class="nav-link {% if request.endpoint in ['admin_users', 'admin_add_user', 'admin_edit_user'] %}active{% endif %}" href="{{ url_for('admin_users') }}">Admin Users</a>
-                    <a class="nav-link {% if request.endpoint in ['admin_projects', 'admin_add_project', 'admin_edit_project', 'owner_project_applicants'] %}active{% endif %}" href="{{ url_for('admin_projects') }}">Admin Projects</a>
-                    <a class="nav-link {% if request.endpoint == 'stats' %}active{% endif %}" href="{{ url_for('stats') }}">Stats</a>
+                    <a class="nav-link {% if request.endpoint in ['admin_projects', 'admin_add_project', 'admin_edit_project', 'owner_project_applicants', 'owner_project_skills', 'add_project_skill', 'edit_project_skill'] %}active{% endif %}" href="{{ url_for('admin_projects') }}">Admin Projects</a>
+                    <a class="nav-link {% if request.endpoint in ['admin_analytics', 'stats'] %}active{% endif %}" href="{{ url_for('admin_analytics') }}">Analytics</a>
                     <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                 {% endif %}
             </div>
